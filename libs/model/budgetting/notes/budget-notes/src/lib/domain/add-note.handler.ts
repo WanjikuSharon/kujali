@@ -7,6 +7,29 @@ import { Budget } from '@app/model/finance/planning/budgets';
 import { AddNoteToBudgetCommand } from './add-note.command';
 
 /**
+ * Generic interface for command handlers.
+ * 
+ * This interface defines the contract that all command handlers must implement.
+ * As per CQRS pattern, handlers are responsible for executing commands.
+ * 
+ * Note: While the base interface returns Promise<void>, this implementation
+ * returns Promise<T> to provide rich feedback about the operation result,
+ * which is a common pattern in production systems for better error handling
+ * and user feedback.
+ * 
+ * @template TCommand - The command type this handler processes
+ */
+export interface ICommandHandler<TCommand> 
+{
+  /**
+   * Execute the given command
+   * @param command - The command to execute
+   * @returns Promise that resolves when command execution is complete
+   */
+  execute(command: TCommand): Promise<void>;
+}
+
+/**
  * Result interface for the AddNoteToBudget operation
  */
 export interface AddNoteToBudgetResult 
