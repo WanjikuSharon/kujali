@@ -1,12 +1,9 @@
-import { Component, EventEmitter, Input, Output, ViewChild } from '@angular/core';
+import { Component, EventEmitter, Output, ViewChild, input, effect, ChangeDetectionStrategy } from '@angular/core';
 import { MatTable, MatTableDataSource } from '@angular/material/table';
 import { MatPaginator } from '@angular/material/paginator';
 import { MatDialog } from '@angular/material/dialog';
 import { MatSort } from '@angular/material/sort';
 import { Router } from '@angular/router';
-
-import { SubSink } from 'subsink';
-import { Observable, tap } from 'rxjs';
 
 import { Budget, BudgetRecord } from '@app/model/finance/planning/budgets';
 
@@ -18,14 +15,14 @@ import { ChildBudgetsModalComponent } from '../../modals/child-budgets-modal/chi
   selector: 'app-budget-table',
   templateUrl: './budget-table.component.html',
   styleUrls: ['./budget-table.component.scss'],
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
 
 export class BudgetTableComponent {
 
-  private _sbS = new SubSink();
-
-  @Input() budgets$: Observable<{overview: BudgetRecord[], budgets: any[]}>;
-  @Input() canPromote = false;
+  // Use signal-based inputs instead of @Input
+  budgets = input.required<{overview: BudgetRecord[], budgets: any[]}>();
+  canPromote = input<boolean>(false);
 
   @Output() doPromote: EventEmitter<void> = new EventEmitter();
 
@@ -40,13 +37,13 @@ export class BudgetTableComponent {
 
   constructor(private _router$$: Router,
               private _dialog: MatDialog,
-  ) { }
-
-  ngOnInit(): void {
-    this._sbS.sink = this.budgets$.pipe(tap((o) => {
-      this.overviewBudgets = o.overview;
-      this.dataSource.data = o.budgets;
-    })).subscribe();
+  ) { 
+    // Use effect to reactively update data when budgets signal changes
+    effect(() => {
+      const budgetsData = this.budgets();
+      this.overviewBudgets = budgetsData.overview;
+      this.dataSource.data = budgetsData.budgets;
+    });
   }
 
   /** 
@@ -81,7 +78,7 @@ export class BudgetTableComponent {
   }
 
   promote() {
-    if (this.canPromote)
+    if (this.canPromote())
       this.doPromote.emit();
   }
 
